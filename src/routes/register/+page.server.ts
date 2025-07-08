@@ -54,8 +54,6 @@ export const actions = {
             password
         });
 
-        console.log(data, error);
-
         if (error || !data.user) {
             console.log("There has been an error", error);
             returnObject.success = false;

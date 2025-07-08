@@ -79,13 +79,13 @@ const authGuard: Handle = async ({ event, resolve }) => {
     event.locals.session = session;
     event.locals.user = user;
 
-    // if (!event.locals.session && event.url.pathname.startsWith("/private")) {
-    //     redirect(303, "/login");
-    // }
+    if (!event.locals.session && event.url.pathname.startsWith("/private")) {
+        redirect(303, "/login");
+    }
 
-    // if (event.locals.session && ['register', 'login'].includes(event.url.pathname)) {
-    //     redirect(303, "/private/dashboard");
-    // }
+    if (event.locals.session && ['register', 'login'].includes(event.url.pathname)) {
+        redirect(303, "/private/dashboard");
+    }
 
     return resolve(event);
 };

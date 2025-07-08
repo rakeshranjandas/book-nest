@@ -15,7 +15,7 @@
         {isRegistration ? "Register": "Login"}
     </h1>
     <div class="form-and-social-login">
-        <form class="auth-form" method="POST">
+        <form class="auth-form" method="POST" action={isRegistration ? "": "/login/?/signInWithPassword"}>
             {#if form && form.errors}
                 {#each form.errors as error}
                     <div class="auth-error"><p>{error}</p></div>
@@ -36,7 +36,11 @@
             <p class="auth-hint mt-s">Do not have an account yet? <a href="/register">Register.</a></p>
             {/if}
         </form>
-        <div class="social-login"></div>
+        <div class="social-login">
+            <form method="POST" action={isRegistration ? "/login/?/googleLogin": "?/googleLogin"}>
+                <Button type="submit">Log in using Google</Button>
+            </form>
+        </div>
     </div>
 </div>
 
