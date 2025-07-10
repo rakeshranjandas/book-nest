@@ -4,7 +4,7 @@
     import { getUserState } from "$lib/state/user-state.svelte";
 
     let userState = getUserState();
-    let user = $derived(userState?.user);
+    let {user, userName} = $derived(userState);
 
     $inspect(user);
     
@@ -27,7 +27,7 @@
         {:else}
         <ul>
             <li>
-                {user.email}
+                {userName}
             </li>
             <li>
                 <Button isMenu={true} onclick={() => userState.logout()}>Logout</Button>
