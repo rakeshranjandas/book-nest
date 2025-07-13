@@ -1,9 +1,8 @@
 <script lang="ts">
     import Button from '$components/Button.svelte';
     import StarRating from '$components/StarRating.svelte';
-    import type { Book } from '$lib/state/user-state';
+    import { getUserState, type Book } from '$lib/state/user-state.svelte';
     import Icon from '@iconify/svelte';
-
 
     interface BookPageProps {
         data: {
@@ -11,29 +10,57 @@
         }
     }
 
+    let userState = getUserState();
+
     let {data}: BookPageProps = $props();
-    let book = $derived(data.book);
+    let book = $derived(userState.getBookById(data.book.id) || data.book);
     let isEditMode = $state(false);
 
-    let title = $state(book.title);
-    let author = $state(book.author);
-    let description = $state(book.description || "");
-    let genre = $state(book.genre || "");
+    let title = $state(data.book.title);
+    let author = $state(data.book.author);
+    let description = $state(data.book.description || "");
+    let genre = $state(data.book.genre || "");
+
 
     function goBack() {
         history.back();
     }
 
-    function toggleEditMode() {
+    async function toggleEditModeAndSave() {
+        if (isEditMode) {
+            await userState.updateBook(book.id, {
+                title,
+                author,
+                description,
+                genre
+            })
+        }
+
         isEditMode = !isEditMode;
     }
+
+    async function updateReadingStatus() {
+        const hasStartedReading = !!book.started_reading_on;
+        const currentTimeStamp = new Date().toISOString();
+
+        if (hasStartedReading) {
+            await userState.updateBook(book.id, {finished_reading_on: currentTimeStamp});
+        } else {
+            await userState.updateBook(book.id, {started_reading_on: currentTimeStamp});
+        }
+    }
+
+    async function updateDatabaseRating(newRating: number) {
+        await userState.updateBook(book.id, {rating: newRating});
+    }
+
 </script>
 
 {#snippet bookInfo()}
     <h2 class="book-title mb-m">{book.title}</h2>
     <p class="book-author">by {book.author}</p>
     <h4 class="mt-m mb-xs semi-bold">Your rating</h4>
-    <StarRating value={book.rating || 0} />
+    <StarRating value={book.rating || 0} onUpdateRating={updateDatabaseRating}/>
     <p class="small-font">
         Click to {book.rating ? "change": "give"} rating
     </p>
@@ -48,7 +75,7 @@
     {/if}
 
     {#if !book.finished_reading_on}
-    <Button isSecondary={true} onclick={() => console.log("Updating reading status")}>
+    <Button isSecondary={!!book.started_reading_on} onclick={updateReadingStatus}>
         {book.started_reading_on ? "I finished reading this book": "I started reading this book"}
     </Button>
     {/if}
@@ -67,7 +94,7 @@
             <input type="text" class="input" bind:value={author} name="author"/>
         </div>
         <h4 class="mt-m mb-xs semi-bold">Your rating</h4>
-        <StarRating value={book.rating||0}/>
+        <StarRating value={book.rating||0} onUpdateRating={updateDatabaseRating}/>
         <p class="small-font">
             Click to {book.rating ? "change": "give"} rating
         </p>
@@ -75,7 +102,7 @@
         <textarea class="textarea mb-m" name="desctiption" bind:value={description} placeholder="Give a description"></textarea>
 
         {#if !book.finished_reading_on}
-        <Button isSecondary={true} onclick={() => console.log("Updating reading status")}>
+        <Button isSecondary={!!book.started_reading_on} onclick={() => console.log("Updating reading status")}>
             {book.started_reading_on ? "I finished reading this book": "I started reading this book"}
         </Button>
         {/if}
@@ -98,7 +125,7 @@
                 {@render bookInfo()}
             {/if}
             <div class="button-container mt-m">
-                <Button isSecondary={true} onclick={toggleEditMode}>{isEditMode ? "Save changes": "Edit"}</Button>
+                <Button isSecondary={true} onclick={toggleEditModeAndSave}>{isEditMode ? "Save changes": "Edit"}</Button>
                 <Button isDanger={true} onclick={() => console.log("delete the book")}>Delete book from library</Button>
             </div>
         </div>

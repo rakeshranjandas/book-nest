@@ -23,6 +23,8 @@ export interface Book {
     user_id: string;
 }
 
+type UpdatableBookFields = Omit<Book, "id" | "user_id" | "created_at">;
+
 export class UserState {
     session = $state<Session | null>(null);
     supabase = $state<SupabaseClient<Database> | null>(null);
@@ -51,8 +53,12 @@ export class UserState {
     getUnreadBooks() {
         return this.allBooks
             .filter((book) => !book.started_reading_on)
-            .toSorted((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-            .slice(0, 9)
+            .toSorted(
+                (a, b) =>
+                    new Date(b.created_at).getTime() -
+                    new Date(a.created_at).getTime()
+            )
+            .slice(0, 9);
     }
 
     getFavoriteGenre() {
@@ -60,35 +66,42 @@ export class UserState {
             return "";
         }
 
-        const genreCounts: {[key: string]: number} = {};
+        const genreCounts: { [key: string]: number } = {};
 
         this.allBooks.forEach((book) => {
-            const genres = book.genre ? book.genre.split(','): [];
+            const genres = book.genre ? book.genre.split(",") : [];
             genres.forEach((genre) => {
                 const trimmedGenre = genre.trim();
                 if (trimmedGenre) {
-                    if (!genreCounts[trimmedGenre]) genreCounts[trimmedGenre] = 1;
+                    if (!genreCounts[trimmedGenre])
+                        genreCounts[trimmedGenre] = 1;
                     else genreCounts[trimmedGenre]++;
                 }
-            })
+            });
         });
 
-        console.log("here",genreCounts);
+        console.log("here", genreCounts);
 
-        const mostCommonGenre = Object.keys(genreCounts).reduce((a, b) => genreCounts[a] > genreCounts[b] ? a: b);
+        const mostCommonGenre = Object.keys(genreCounts).reduce((a, b) =>
+            genreCounts[a] > genreCounts[b] ? a : b
+        );
 
         return mostCommonGenre || null;
     }
 
     getFavoriteGenreBooks() {
-        const mostCommonGenre: string|null = this.getFavoriteGenre();
+        const mostCommonGenre: string | null = this.getFavoriteGenre();
         if (!mostCommonGenre) {
             return this.allBooks;
         }
 
         return this.allBooks
-            .filter((book) => book.genre && book.genre.split(',')
-            .includes(mostCommonGenre)).slice(0, 9);
+            .filter(
+                (book) =>
+                    book.genre &&
+                    book.genre.split(",").includes(mostCommonGenre)
+            )
+            .slice(0, 9);
     }
 
     async fetchData() {
@@ -98,18 +111,52 @@ export class UserState {
 
         const [booksResponse, userNamesResponse] = await Promise.all([
             this.supabase.from("books").select("*").eq("user_id", this.user.id),
-            this.supabase.from("user_names").select("*").eq("user_id", this.user.id).single()
+            this.supabase
+                .from("user_names")
+                .select("*")
+                .eq("user_id", this.user.id)
+                .single(),
         ]);
 
-        
         if (booksResponse.error || userNamesResponse.error) {
             console.log("Error fetching from database");
-            console.log({booksResponse,userNamesResponse});
+            console.log({ booksResponse, userNamesResponse });
             return;
         }
 
         this.allBooks = booksResponse.data;
         this.userName = userNamesResponse.data.name;
+    }
+
+    getBookById(bookId: number) {
+        return this.allBooks.find((book) => book.id === bookId);
+    }
+
+    async updateBook(
+        bookId: number,
+        updateObject: Partial<UpdatableBookFields>
+    ) {
+        if (!this.supabase) {
+            return;
+        }
+
+        const { status, error } = await this.supabase
+            .from("books")
+            .update(updateObject)
+            .eq("id", bookId);
+
+        if (status === 204 && !error) {
+            this.allBooks = this.allBooks.map((book) => {
+                if (book.id === bookId) {
+                    return {
+                        ...book,
+                        ...updateObject,
+                    };
+                }
+
+                return book;
+            });
+        }
     }
 
     async logout() {
