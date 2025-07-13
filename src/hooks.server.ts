@@ -80,11 +80,13 @@ const authGuard: Handle = async ({ event, resolve }) => {
     event.locals.session = session;
     event.locals.user = user;
 
+    // Session not present, and "private" is being accessed -> Show login
     if (!event.locals.session && event.url.pathname.startsWith("/private")) {
         redirect(303, "/login");
     }
 
-    if (event.locals.session && ['register', 'login'].includes(event.url.pathname)) {
+    // Session is present, and non-private page is being access -> Show private dashboard
+    if (event.locals.session && !event.url.pathname.startsWith("/private")) {
         redirect(303, "/private/dashboard");
     }
 
