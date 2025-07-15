@@ -3,6 +3,7 @@
     import StarRating from '$components/StarRating.svelte';
     import { getUserState, type Book } from '$lib/state/user-state.svelte';
     import Icon from '@iconify/svelte';
+    import Dropzone from 'svelte-file-dropzone';
 
     interface BookPageProps {
         data: {
@@ -52,6 +53,15 @@
 
     async function updateDatabaseRating(newRating: number) {
         await userState.updateBook(book.id, {rating: newRating});
+    }
+
+    async function handleDrop(e: CustomEvent<any>) {
+        const { acceptedFiles } = e.detail;
+
+        if (acceptedFiles.length) {
+            const file = acceptedFiles[0] as File;
+            await userState.uploadBookCover(book.id, file);
+        }
     }
 
 </script>
@@ -126,17 +136,23 @@
             {/if}
             <div class="button-container mt-m">
                 <Button isSecondary={true} onclick={toggleEditModeAndSave}>{isEditMode ? "Save changes": "Edit"}</Button>
-                <Button isDanger={true} onclick={() => console.log("delete the book")}>Delete book from library</Button>
+                <Button isDanger={true} onclick={() => userState.deleteBookFromLibrary(book.id)}>Delete book from library</Button>
             </div>
         </div>
         <div class="book-cover">
             {#if book.cover_image}
             <img src={book.cover_image} alt="" />
             {:else}
-            <button class="add-cover">
+            <Dropzone
+                on:drop={handleDrop}
+                multiple={false}
+                accept="image/*"
+                maxSize={5 * 1024 * 1024}
+                containerClasses={"dropzone-cover"}
+            >
                 <Icon icon="bi:camera-fill" width={"40"} />
                 <p>Add book cover</p>
-            </button>
+            </Dropzone>
             {/if}
 
         </div>
@@ -197,5 +213,14 @@
 
     .input-author p {
         margin-right: 8px;
+    }
+
+    :global(.dropzone-cover) {
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border-radius: inherit;
+        cursor: pointer;
     }
 </style>
