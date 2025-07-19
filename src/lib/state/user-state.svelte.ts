@@ -1,4 +1,4 @@
-import { goto } from "$app/navigation";
+import { goto, preloadCode } from "$app/navigation";
 import type { Database } from "$lib/types/database.types";
 import type { Session, SupabaseClient, User } from "@supabase/supabase-js";
 import { getContext, setContext } from "svelte";
@@ -21,6 +21,11 @@ export interface Book {
     started_reading_on: string | null;
     title: string;
     user_id: string;
+}
+
+export interface OpenAiBook {
+    author: string;
+    bookTitle: string;
 }
 
 type UpdatableBookFields = Omit<Book, "id" | "user_id" | "created_at">;
@@ -188,6 +193,29 @@ export class UserState {
         }
 
         goto("/private/dashboard");
+    }
+
+    async addBooksToLibrary(booksToAdd: OpenAiBook[]) {
+        if (!this.supabase || !this.user) {
+            return;
+        }
+
+        const userId = this.user.id;
+
+        const processedBooks = booksToAdd.map(book => {
+            return {
+                title: book.bookTitle,
+                author: book.author,
+                user_id: userId
+            }
+        });
+
+        const { error } = await this.supabase.from("books").insert(processedBooks);
+        if (error) {
+            throw new Error(error.message);
+        }
+
+        await this.fetchData();
     }
 
     async logout() {
