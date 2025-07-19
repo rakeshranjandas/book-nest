@@ -6,7 +6,7 @@ import {
     PUBLIC_SUPABASE_URL,
     PUBLIC_SUPABASE_ANON_KEY,
 } from "$env/static/public";
-import { Database } from "$lib/types/database.types";
+import type { Database } from "$lib/types/database.types";
 
 const supabase: Handle = async ({ event, resolve }) => {
     /**
