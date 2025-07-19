@@ -42,8 +42,8 @@
         position: relative; /*Because we will be setting the image as absolute position within*/
         display: flex;
         flex-direction: column;
-        width: 100%;
         min-width: 360px;
+        width: 360px;
         max-width: 450px;
         height: 300px;
         border-radius: 12px;

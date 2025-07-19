@@ -34,6 +34,13 @@
         isEditMode = !isEditMode;
     }
     
+    async function deleteAccount() {
+        const confirmDelete = window.confirm("Are you sure you want to delete your account?");
+
+        if (confirmDelete) {
+            await userState.deleteAccount();
+        }
+    }
 </script>
 
 <div class="settings-page">
@@ -59,7 +66,7 @@
             <Button isSecondary={true} onclick={toggleEditModeAndSaveToDatabase}>
                 {isEditMode ? "Save changes": "Edit"}
             </Button>
-            <Button isDanger={true} onclick={() => {}}>
+            <Button isDanger={true} onclick={deleteAccount}>
                 Delete account
             </Button>
         </div>

@@ -23,10 +23,20 @@
         </div>
     </div>
 
-    <BookCategory booksToDisplay={userState.getHighestRatedBooks()} categoryName={"Your favorite books"} />
-    <BookCategory booksToDisplay={userState.getUnreadBooks()} categoryName={"Recently added, unread books"} />
-    <BookCategory booksToDisplay={userState.getFavoriteGenreBooks()} categoryName={`Highest rated books from your favorite genre: ${userState.getFavoriteGenre()}`} />
-
+    {#if allBooks.length}
+        {#if userState.getHighestRatedBooks().length}
+        <BookCategory booksToDisplay={userState.getHighestRatedBooks()} categoryName={"Your favorite books"} />
+        {/if}
+        
+        <BookCategory booksToDisplay={userState.getUnreadBooks()} categoryName={"Recently added, unread books"} />
+    
+        {#if userState.getFavoriteGenre()}
+        <BookCategory booksToDisplay={userState.getFavoriteGenreBooks()} categoryName={`Highest rated books from your favorite genre: ${userState.getFavoriteGenre()}`} />
+        {/if}
+        {:else}
+        
+        <h4>You have no books in you library at this moment. <a href="/private/scan-shelf">Add a book</a> to get started</h4>
+    {/if}
 </div>
 
 <style>
