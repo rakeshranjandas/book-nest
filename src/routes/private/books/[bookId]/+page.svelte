@@ -220,7 +220,7 @@
         display: flex;
         justify-content: center;
         align-items: center;
-        border-radius: inherit;
+        border-radius: inherit !important;
         cursor: pointer;
     }
 </style>

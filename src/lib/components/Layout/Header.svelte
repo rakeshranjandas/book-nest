@@ -6,7 +6,7 @@
     let userState = getUserState();
     let {user, userName} = $derived(userState);
 
-    $inspect(user);
+    // $inspect(user);
     
 </script>
 
